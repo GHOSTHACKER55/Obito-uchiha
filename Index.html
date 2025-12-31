@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Obito Uchiha Game</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#111">
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, Helvetica, sans-serif;
+  background:#0b0b0b;
+  color:#fff;
+  text-align:center;
+}
+.container{
+  max-width:420px;
+  margin:30px auto;
+  background:#111;
+  border-radius:16px;
+  padding:20px;
+  box-shadow:0 0 30px rgba(0,0,0,.7);
+}
+h1{color:#00ff99}
+.info{font-size:14px;color:#ccc;margin-bottom:10px}
+.score{
+  font-size:40px;
+  margin:20px 0;
+  color:#00ff99;
+}
+button{
+  width:100%;
+  padding:16px;
+  font-size:18px;
+  background:#00ff99;
+  border:none;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button:hover{background:#33ffb3}
+.footer{
+  margin-top:15px;
+  font-size:12px;
+  color:#aaa;
+}
+.install{
+  margin-top:12px;
+  font-size:13px;
+  color:#ffd700;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <h1>🎮 Obito Uchiha</h1>
+  <div class="info">Owner: Obito Uchiha<br>📞 03030474011</div>
+
+  <p>Tap the button and score points!</p>
+  <div class="score" id="score">0</div>
+
+  <button onclick="addScore()">TAP ME</button>
+
+  <div class="install">⬇ Install this game from browser menu</div>
+
+  <div class="footer">
+    Simple HTML Game • PWA Install Supported
+  </div>
+</div>
+
+<script>
+let s=0;
+function addScore(){
+  s++;
+  document.getElementById('score').innerText=s;
+}
+
+// Register Service Worker for install
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>
