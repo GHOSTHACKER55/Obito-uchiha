@@ -1,30 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Ghosty AFK Console</title>
     <style>
-        body { background: #111; color: #0f0; font-family: monospace; padding: 20px; }
-        #stats { border: 1px solid #333; padding: 10px; margin-bottom: 10px; display: flex; gap: 20px; }
-        #chat-box { height: 300px; border: 1px solid #333; overflow-y: scroll; background: #000; padding: 10px; }
-        .stat-val { color: #fff; font-weight: bold; }
-        .system-msg { color: #888; }
+        body { background: #0a0a0a; color: #00ff41; font-family: 'Courier New', monospace; padding: 20px; }
+        .panel { border: 1px solid #00ff41; padding: 20px; margin-bottom: 20px; background: #000; box-shadow: 0 0 10px #00ff41; }
+        input { background: #111; border: 1px solid #00ff41; color: #fff; padding: 10px; margin-right: 10px; width: 200px; }
+        button { background: #00ff41; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #fff; }
+        #chat-box { height: 300px; border: 1px solid #333; overflow-y: scroll; background: #000; padding: 10px; margin-top: 10px; color: #aaa; }
+        .stat-grid { display: flex; gap: 30px; font-size: 1.2em; margin-top: 10px; }
+        .label { color: #888; font-size: 0.8em; text-transform: uppercase; }
     </style>
 </head>
 <body>
-    <h1>GHOSTY CONSOLE CLIENT</h1>
-    <div id="stats">
-        <div>Health: <span id="hp" class="stat-val">0</span></div>
-        <div>Food: <span id="food" class="stat-val">0</span></div>
-        <div>Pos: <span id="pos" class="stat-val">0, 0, 0</span></div>
+
+    <div class="panel">
+        <h2>1. CONNECT TO SERVER</h2>
+        <input type="text" id="username" placeholder="Minecraft Username">
+        <input type="text" id="host" placeholder="Server IP (e.g. play.hypixel.net)">
+        <button onclick="connectBot()">START AFK BOT</button>
     </div>
-    <div id="chat-box"></div>
+
+    <div class="panel">
+        <h2>2. LIVE STATUS</h2>
+        <div class="stat-grid">
+            <div><div class="label">Status</div><span id="status">Disconnected</span></div>
+            <div><div class="label">Health</div><span id="hp">0</span></div>
+            <div><div class="label">Food</div><span id="food">0</span></div>
+            <div><div class="label">Position</div><span id="pos">0, 0, 0</span></div>
+        </div>
+        <div id="chat-box"></div>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        const chatBox = document.getElementById('chat-box');
+
+        function connectBot() {
+            const user = document.getElementById('username').value;
+            const ip = document.getElementById('host').value;
+            if(!user || !ip) return alert("Enter details first!");
+            
+            socket.emit('start-bot', { username: user, host: ip });
+            document.getElementById('status').innerText = "Connecting...";
+        }
 
         socket.on('update', (data) => {
+            document.getElementById('status').innerText = "Online";
             document.getElementById('hp').innerText = data.health;
             document.getElementById('food').innerText = data.food;
             document.getElementById('pos').innerText = data.pos;
@@ -33,8 +57,9 @@
         socket.on('chat', (msg) => {
             const div = document.createElement('div');
             div.innerText = msg;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            const box = document.getElementById('chat-box');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         });
     </script>
 </body>
