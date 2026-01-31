@@ -7,47 +7,50 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// --- CONFIGURATION ---
-const bot = mineflayer.createBot({
-    host: 'YOUR_SERVER_IP', 
-    username: 'YOUR_EMAIL',
-    auth: 'microsoft',
-    version: false // Auto-detect version
-});
+app.use(express.static(__dirname));
 
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
-});
+io.on('connection', (socket) => {
+    let bot;
 
-// --- BOT LOGIC ---
-bot.on('spawn', () => {
-    console.log("Bot spawned!");
-    io.emit('chat', "SYSTEM: Bot has connected successfully.");
-    
-    // Anti-AFK: Move head slightly
-    setInterval(() => {
-        bot.look(bot.entity.yaw + 0.1, 0);
-    }, 15000);
-});
+    socket.on('start-bot', (data) => {
+        if (bot) bot.quit(); // Restart if already running
 
-bot.on('messagestr', (message) => {
-    io.emit('chat', message); // Send in-game chat to web dashboard
-});
-
-// Update stats every second
-setInterval(() => {
-    if (bot.entity) {
-        io.emit('update', {
-            health: Math.round(bot.health),
-            food: Math.round(bot.food),
-            pos: `${Math.round(bot.entity.position.x)}, ${Math.round(bot.entity.position.y)}, ${Math.round(bot.entity.position.z)}`
+        bot = mineflayer.createBot({
+            host: data.host,
+            username: data.username,
+            auth: 'microsoft' // Required for paid accounts
         });
-    }
-}, 1000);
 
-bot.on('error', (err) => io.emit('chat', `ERROR: ${err.message}`));
-bot.on('kicked', (reason) => io.emit('chat', `KICKED: ${reason}`));
+        bot.on('spawn', () => {
+            io.emit('chat', `[SYSTEM] Connected to ${data.host} as ${data.username}`);
+            
+            // Anti-AFK Routine: Micro-movement
+            setInterval(() => {
+                if(bot.entity) {
+                    bot.setControlState('jump', true);
+                    setTimeout(() => bot.setControlState('jump', false), 200);
+                }
+            }, 50000); 
+        });
+
+        bot.on('messagestr', (msg) => io.emit('chat', msg));
+        
+        bot.on('error', (err) => io.emit('chat', `[ERROR] ${err.message}`));
+        bot.on('kicked', (reason) => io.emit('chat', `[KICKED] ${reason}`));
+
+        // Send stats to UI
+        setInterval(() => {
+            if (bot && bot.entity) {
+                io.emit('update', {
+                    health: Math.round(bot.health),
+                    food: Math.round(bot.food),
+                    pos: `${Math.round(bot.entity.position.x)}, ${Math.round(bot.entity.position.y)}, ${Math.round(bot.entity.position.z)}`
+                });
+            }
+        }, 1000);
+    });
+});
 
 server.listen(3000, () => {
-    console.log('Dashboard running on http://localhost:3000');
+    console.log('Control panel ready: http://localhost:3000');
 });
