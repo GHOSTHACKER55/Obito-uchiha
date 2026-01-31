@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Ghosty AFK Console</title>
+    <style>
+        body { background: #111; color: #0f0; font-family: monospace; padding: 20px; }
+        #stats { border: 1px solid #333; padding: 10px; margin-bottom: 10px; display: flex; gap: 20px; }
+        #chat-box { height: 300px; border: 1px solid #333; overflow-y: scroll; background: #000; padding: 10px; }
+        .stat-val { color: #fff; font-weight: bold; }
+        .system-msg { color: #888; }
+    </style>
+</head>
+<body>
+    <h1>GHOSTY CONSOLE CLIENT</h1>
+    <div id="stats">
+        <div>Health: <span id="hp" class="stat-val">0</span></div>
+        <div>Food: <span id="food" class="stat-val">0</span></div>
+        <div>Pos: <span id="pos" class="stat-val">0, 0, 0</span></div>
+    </div>
+    <div id="chat-box"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const chatBox = document.getElementById('chat-box');
+
+        socket.on('update', (data) => {
+            document.getElementById('hp').innerText = data.health;
+            document.getElementById('food').innerText = data.food;
+            document.getElementById('pos').innerText = data.pos;
+        });
+
+        socket.on('chat', (msg) => {
+            const div = document.createElement('div');
+            div.innerText = msg;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
+</body>
+</html>
