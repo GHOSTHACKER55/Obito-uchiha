@@ -2,65 +2,169 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ghosty AFK Console</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYPHER-X | Pairing Code</title>
     <style>
-        body { background: #0a0a0a; color: #00ff41; font-family: 'Courier New', monospace; padding: 20px; }
-        .panel { border: 1px solid #00ff41; padding: 20px; margin-bottom: 20px; background: #000; box-shadow: 0 0 10px #00ff41; }
-        input { background: #111; border: 1px solid #00ff41; color: #fff; padding: 10px; margin-right: 10px; width: 200px; }
-        button { background: #00ff41; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #fff; }
-        #chat-box { height: 300px; border: 1px solid #333; overflow-y: scroll; background: #000; padding: 10px; margin-top: 10px; color: #aaa; }
-        .stat-grid { display: flex; gap: 30px; font-size: 1.2em; margin-top: 10px; }
-        .label { color: #888; font-size: 0.8em; text-transform: uppercase; }
+        :root {
+            --primary: #00ffcc;
+            --bg: #0a0a0a;
+            --card: #161616;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 255, 204, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        h1 {
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 1.5rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #222;
+            color: white;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: var(--primary);
+            color: black;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #00ccaa;
+            transform: translateY(-2px);
+        }
+
+        #code-display {
+            display: none;
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #000;
+            border: 1px dashed var(--primary);
+            border-radius: 8px;
+        }
+
+        .pairing-code {
+            font-size: 1.5rem;
+            font-family: monospace;
+            color: var(--primary);
+            font-weight: bold;
+            letter-spacing: 4px;
+        }
+
+        .loader {
+            display: none;
+            margin: 10px auto;
+            border: 3px solid #333;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <div class="panel">
-        <h2>1. CONNECT TO SERVER</h2>
-        <input type="text" id="username" placeholder="Minecraft Username">
-        <input type="text" id="host" placeholder="Server IP (e.g. play.hypixel.net)">
-        <button onclick="connectBot()">START AFK BOT</button>
+<div class="container">
+    <h1>◈ CYPHER-X ◈</h1>
+    <p>Enter your number with country code<br>(e.g. 923001234567)</p>
+    
+    <input type="number" id="phoneNumber" placeholder="923001234567">
+    <button onclick="getPairingCode()" id="submitBtn">Get Pairing Code</button>
+    
+    <div class="loader" id="loader"></div>
+
+    <div id="code-display">
+        <p style="margin-bottom: 5px;">Your Pairing Code:</p>
+        <div class="pairing-code" id="code">---- ----</div>
+        <p style="margin-top: 10px; font-size: 0.7rem;">Enter this code in WhatsApp Linked Devices</p>
     </div>
+</div>
 
-    <div class="panel">
-        <h2>2. LIVE STATUS</h2>
-        <div class="stat-grid">
-            <div><div class="label">Status</div><span id="status">Disconnected</span></div>
-            <div><div class="label">Health</div><span id="hp">0</span></div>
-            <div><div class="label">Food</div><span id="food">0</span></div>
-            <div><div class="label">Position</div><span id="pos">0, 0, 0</span></div>
-        </div>
-        <div id="chat-box"></div>
-    </div>
+<script>
+    async function getPairingCode() {
+        const number = document.getElementById('phoneNumber').value;
+        const submitBtn = document.getElementById('submitBtn');
+        const loader = document.getElementById('loader');
+        const codeDisplay = document.getElementById('code-display');
+        const codeText = document.getElementById('code');
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
+        if (!number) return alert("Please enter a number!");
 
-        function connectBot() {
-            const user = document.getElementById('username').value;
-            const ip = document.getElementById('host').value;
-            if(!user || !ip) return alert("Enter details first!");
-            
-            socket.emit('start-bot', { username: user, host: ip });
-            document.getElementById('status').innerText = "Connecting...";
+        // UI States
+        submitBtn.style.display = 'none';
+        loader.style.display = 'block';
+        codeDisplay.style.display = 'none';
+
+        try {
+            // Replace '/pair?number=' with your actual API endpoint
+            const response = await fetch(`/pair?number=${number}`);
+            const data = await response.json();
+
+            if (data.code) {
+                codeText.innerText = data.code;
+                codeDisplay.style.display = 'block';
+            } else {
+                alert("Error: Could not generate code.");
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Connection error. Is the bot server running?");
+        } finally {
+            loader.style.display = 'none';
+            submitBtn.style.display = 'block';
         }
+    }
+</script>
 
-        socket.on('update', (data) => {
-            document.getElementById('status').innerText = "Online";
-            document.getElementById('hp').innerText = data.health;
-            document.getElementById('food').innerText = data.food;
-            document.getElementById('pos').innerText = data.pos;
-        });
-
-        socket.on('chat', (msg) => {
-            const div = document.createElement('div');
-            div.innerText = msg;
-            const box = document.getElementById('chat-box');
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
-        });
-    </script>
 </body>
 </html>
